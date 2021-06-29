@@ -1,167 +1,195 @@
-import Weapons.weaponSelect;
+import javafx.animation.Animation;
+import javafx.animation.KeyFrame;
+import javafx.animation.KeyValue;
+import javafx.animation.Timeline;
 import javafx.application.Application;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
-import javafx.geometry.Pos;
-import javafx.scene.control.*;
-import javafx.scene.layout.HBox;
-import javafx.stage.Stage;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
+import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.Group;
 import javafx.scene.Scene;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.VBox;
-import Character.character;
+import javafx.scene.control.*;
+import javafx.scene.effect.Glow;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
+import javafx.scene.paint.CycleMethod;
+import javafx.scene.paint.LinearGradient;
+import javafx.scene.paint.Stop;
+import javafx.scene.shape.SVGPath;
+import javafx.scene.text.Font;
+import javafx.scene.text.Text;
+import javafx.stage.FileChooser;
+import javafx.stage.Stage;
+import javafx.util.Duration;
+
+import java.beans.EventHandler;
 import java.io.*;
 
-public class Main extends Application  {
-    public weaponSelect weaponchoice = new weaponSelect();
-    character ch = new character();
-    
+public class Main extends Application {
+    Scene scene1, scene2, scene3;
+
     @Override
     public void start(Stage primaryStage) {
-        File file = new File("Character.txt");
-        if(file.exists()) {
-            try (
+        // Scene1
+        Text text = new Text("DINOQUEST");
+        text.setFont(Font.font("Verdana", 45));
+        text.setX(50);
+        text.setY(150);
+        Timeline timeline = new Timeline();
+        timeline.setCycleCount(1);
+        timeline.getKeyFrames().add(new KeyFrame(Duration.millis(4000)));
+        timeline.play();
+            Stop[] stops = new Stop[]{
+                    new Stop(0, Color.TURQUOISE),
+                    new Stop(1, Color.BLACK)
+            };
+            LinearGradient linearGradient =
+                    new LinearGradient(0, 0, 1, 0, true, CycleMethod.NO_CYCLE, stops);
+            text.setFill(linearGradient);
+            Group root1 = new Group(text);
+            scene1 = new Scene(root1, 400, 300);
+           timeline.setOnFinished(e -> primaryStage.setScene(scene2));
 
-                    ObjectInputStream input = new ObjectInputStream(new FileInputStream(file));
-
-            ) {
-                ch = (character) input.readObject();
-                System.out.println("test");
-            } catch (IOException e) {
-                e.printStackTrace();
-            } catch (ClassNotFoundException e) {
-                e.printStackTrace();
-            }
-        }
-        System.out.println(ch.getCharacter());
+        // Scene2
         BorderPane pane = new BorderPane();
-
-        HBox stats = new HBox();
-        pane.setCenter(stats);
-        stats.setAlignment(Pos.CENTER);;
-        stats.setStyle("-fx-border-color: black");
-
-        VBox paneforbuttons = new VBox(60);
-        Label wp = new Label("Choose your Weapon");
-        paneforbuttons.getChildren().add(wp);
-        paneforbuttons.setPadding(new Insets(5, 5, 5, 5));
-        paneforbuttons.setStyle("-fx-border-color: black");
-        paneforbuttons.setStyle("-fx-border-width: 2px; -fx-border-color: black");
-
-        ToggleButton sword = new ToggleButton("Sword");
-        ToggleButton bow = new ToggleButton("Bow");
-        ToggleButton dagger = new ToggleButton("Dagger");
-        ToggleButton axe = new ToggleButton("Axe");
-        Button save = new Button("Save");
-        paneforbuttons.getChildren().addAll(sword, bow, dagger, axe);
-        pane.setLeft(paneforbuttons);
-
-        ToggleGroup group = new ToggleGroup();
-        sword.setToggleGroup(group);
-        sword.setSelected(true);
-        bow.setToggleGroup(group);
-        dagger.setToggleGroup(group);
-        axe.setToggleGroup(group);
-
-        Label label = new Label("Enter Character Name");
+        BorderPane panefortext = new BorderPane();
+        Button newChar = new Button("New Characater");
+        Button previous = new Button("Previous Character");
+        panefortext.setPadding(new Insets(5, 5, 5, 5));
+        panefortext.setStyle("-fx-border-color: black");
+        pane.setLeft(newChar);
+        pane.setTop(previous);
         TextField tf = new TextField();
-        tf.setText(ch.getCharacter());
-        HBox hbox = new HBox();
-        pane.setTop(hbox);
-        hbox.setAlignment(Pos.TOP_CENTER);
-        hbox.setSpacing(10);
-        hbox.setLayoutY(200);
-        hbox.setStyle("-fx-border-color: black");
-        tf.setLayoutX(300);
-        tf.setLayoutY(300);
-        hbox.getChildren().addAll(label, tf);
+        newChar.setOnAction(e -> {
+                    panefortext.setLeft(new Label("Enter Character Name"));
+                    panefortext.setRight(tf);
+                    pane.setTop(panefortext);
+                });
+        ImageView spriteImage = new ImageView("Sprite Medium.png");
+        spriteImage.relocate(-50,100);
+        pane.getChildren().add(spriteImage);
+        Bounds bounds = pane.getBoundsInLocal();
+        Timeline spriteTimeline = new Timeline(new KeyFrame(Duration.seconds(5),
+                new KeyValue(spriteImage.layoutXProperty(), bounds.getMaxX()-spriteImage.getFitWidth())));
+        spriteTimeline.setCycleCount(Animation.INDEFINITE);
+        spriteTimeline.play();
+        Button Contin = new Button("Continue");
+        Button confirm = new Button("Confirm");
+        HBox buttonPane = new HBox();
+        Button yes = new Button("Yes");
+        Button no = new Button("no");
+        buttonPane.getChildren().addAll(yes, no);
+        pane.setRight(Contin);
+        scene2 = new Scene(pane, 400,300);
 
-        HBox savebox = new HBox();
-        pane.setBottom(savebox);
-        savebox.setAlignment(Pos.BOTTOM_CENTER);
-        savebox.getChildren().add(save);
+        Contin.setOnAction(e -> {
+                    panefortext.setLeft(new Label("Confirm Name: " + tf.getText()));
+                    pane.getChildren().removeAll(newChar,previous);
+                    pane.setRight(confirm);
+                });
+        File file = new File(tf.getText() + ".dat");
+        FileChooser fileChooser = new FileChooser();
+                          confirm.setOnAction(event -> {
+                              pane.getChildren().removeAll(newChar,previous);
+                                  try {
+                                      if(!file.exists()) {
+                                          try (DataOutputStream output = new DataOutputStream(new FileOutputStream(tf.getText() + ".dat"))) {
+                                              output.writeUTF(tf.getText());
+                                          }
+                                      }
+                                      else {
+                                          try (DataInputStream input = new DataInputStream(new FileInputStream(tf.getText() + ".dat"))) {
+                                              input.readUTF();
+                                          }
+                                      }
+                                  } catch (IOException ioException) {
+                                      ioException.printStackTrace();
+                                  }
+                              primaryStage.setScene(scene3);
+                            });
+                            Label label = new Label();
+                            pane.setCenter(label);
+                            previous.setOnAction(e -> {
+                                File selectedFile = fileChooser.showOpenDialog(primaryStage);
+                                label.setText("Is this correct? " + selectedFile);
+                                pane.getChildren().remove(newChar);
+                                pane.getChildren().remove(Contin);
+                                pane.getChildren().remove(previous);
+                                pane.getChildren().remove(spriteImage);
+                                pane.setTop(buttonPane);
+                            });
+                            Button Next = new Button("Next");
+                            Next.setOnAction(e -> {primaryStage.setScene(scene3);});
+                            yes.setOnAction(e -> {primaryStage.setScene(scene3);});
+                            no.setOnAction(e -> {
+                                pane.getChildren().remove(label);
+                                buttonPane.getChildren().removeAll(yes, no);
+                                pane.getChildren().add(Next);
+                                spriteImage.relocate(0,100);
+                                pane.getChildren().add(spriteImage);
+                                Bounds bound = pane.getBoundsInLocal();
+                                Timeline spritetimeline = new Timeline(new KeyFrame(Duration.seconds(3),
+                                        new KeyValue(spriteImage.layoutXProperty(), bound.getMaxX()-spriteImage.getFitWidth())));
+                                spritetimeline.setCycleCount(2);
+                                spritetimeline.play();
+                            });
 
-        sword.setOnAction(new EventHandler<ActionEvent>() {
+        // Scene3
+        VBox b = new VBox(100);
+        BorderPane imagePane = new BorderPane();
+        imagePane.setPadding(new Insets(5,5,5,5));
+        b.setPadding(new Insets(5, 5, 5, 5));
+        imagePane.setLeft(b);
+        Button next = new Button("Next");
+        Glow glow = new Glow();
+        glow.setLevel(0.9);
+        RadioButton Sword = new RadioButton("Sword");
+        ImageView SwordImage = new ImageView("Sword Art Medium.png");
+        SwordImage.setEffect(glow);
+        RadioButton Bow = new RadioButton("Bow");
+        ImageView BowImage = new ImageView("Bow Art Medium.png");
+        BowImage.setEffect(glow);
+        RadioButton Staff = new RadioButton("Staff");
+        ImageView StaffImage = new ImageView("Staff Art Medium.png");
+        StaffImage.setEffect(glow);
+        final ToggleGroup group = new ToggleGroup();
+        Sword.setToggleGroup(group);
+        Bow.setToggleGroup(group);
+        Staff.setToggleGroup(group);
+        b.getChildren().addAll(Sword, Bow, Staff);
+        imagePane.setBottom(next);
+
+        group.selectedToggleProperty().addListener(new ChangeListener<Toggle>() {
             @Override
-            public void handle(ActionEvent event) {
-                if (sword.isSelected()) {
-                    ch.setWp(weaponchoice.sword);
-                    sword.requestFocus();
+            public void changed(ObservableValue<? extends Toggle> observable, Toggle oldValue, Toggle newValue) {
+                if(group.getSelectedToggle() == Sword) {
+                    imagePane.setCenter(SwordImage);
+                } else if(group.getSelectedToggle() == Bow) {
+                    imagePane.setCenter(BowImage);
+                } else if(group.getSelectedToggle() == Staff) {
+                    imagePane.setCenter(StaffImage);
                 }
             }
         });
-
-        bow.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                if (bow.isSelected()) {
-                    ch.setWp(weaponchoice.bow);
-                    bow.requestFocus();
-                }
-            }
+        next.setOnAction(e -> {
+            b.getChildren().removeAll(Sword, Bow, Staff);
+            Text txt = new Text("The Journey Continues Here....");
+            txt.setFont(Font.font("Verdana", 25));
+            txt.setStyle("-fx-border-color: Red");
+            txt.setX(50);
+            txt.setY(150);;
+            b.getChildren().add(txt);
         });
-
-        dagger.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                if (dagger.isSelected()) {
-                    ch.setWp(weaponchoice.dagger);
-                    dagger.requestFocus();
-                }
-            }
-        });
-
-        axe.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                if (axe.isSelected()) {
-                    ch.setWp(weaponchoice.axe);
-                    axe.requestFocus();
-                }
-            }
-        });
-
-        save.setOnMouseClicked(event ->  {
-            ch.setCharacter(tf.getText());
-                try (
-                        ObjectOutputStream output = new ObjectOutputStream(new FileOutputStream("Character.txt", true));
-                ) {
-                    output.writeObject(ch);
-                    pane.setCenter(label);
-                    label.setText("Character Info Saved");
-                } catch (FileNotFoundException e) {
-                    System.out.println("File Cannot Be Saved");
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-
-               /*try(
-            ObjectInputStream input = new ObjectInputStream(new FileInputStream("Character.txt"));
-                    ) {
-                    ch = (character) input.readObject();
-                    weaponchoice = (weaponSelect) input.readObject();
-                    if (ch.getWp() == weaponchoice.sword) {
-                        sword.setSelected(true);
-                    } else if(ch.getWp() == weaponchoice.bow) {
-                        bow.setSelected(true);
-                    } else if(ch.getWp() == weaponchoice.dagger) {
-                        dagger.setSelected(true);
-                    }else if(ch.getWp() == weaponchoice.axe) {
-                        axe.setSelected(true);
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                } catch (ClassNotFoundException e) {
-                    e.printStackTrace();
-                }*/
-        });
-                
-        Scene scene = new Scene(pane, 600, 600);
-        primaryStage.setTitle("DinoQuest 0.1");
-        primaryStage.setScene(scene);
+        scene3 = new Scene(imagePane, 400,300);
+        primaryStage.setTitle("DinoQuest");
+        primaryStage.setScene(scene1);
         primaryStage.show();
     }
-
+    
     public static void main(String[] args) { launch(args); }
 }
+
