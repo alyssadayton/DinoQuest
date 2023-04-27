@@ -1,2 +1,2 @@
 # DinoQuest
-Small animation to the beginning of a game.
+The quest to save Timmy the dinosaur!
